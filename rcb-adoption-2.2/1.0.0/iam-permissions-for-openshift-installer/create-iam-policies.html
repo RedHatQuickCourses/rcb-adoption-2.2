@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Create IAM Policies :: OCP on AWS Hands-On Lab</title>
+    <link rel="prev" href="what-permissions-are-required.html">
+    <link rel="next" href="create-iam-role.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OCP on AWS Hands-On Lab</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rcb-adoption-2.2" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OCP on AWS Hands-On Lab</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../pre-requisite-setup/pre-requisite-setup.html">Pre-requisite setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/provision-aws-blank-environment.html">Provision AWS Blank Environment</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/deploy-vpc-resources.html">Deploy VPC Resources</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="what-permissions-are-required.html">What Permissions are Required?</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="create-iam-policies.html">Create IAM Policies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="create-iam-role.html">Create IAM Role</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OCP on AWS Hands-On Lab</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OCP on AWS Hands-On Lab</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OCP on AWS Hands-On Lab</a></li>
+    <li><a href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a></li>
+    <li><a href="create-iam-policies.html">Create IAM Policies</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Create IAM Policies</h1>
+<h1 id="_create_iam_policies" class="sect0"><a class="anchor" href="#_create_iam_policies"></a>Create IAM Policies</h1>
+<div class="paragraph">
+<p>The OpenShift installer requires specific permissions to provision and manage the necessary AWS resources for your cluster. These permissions are defined in AWS Identity and Access Management (IAM) policies. In this section, you will learn what permissions are required and how to create these IAM policies within your AWS account.</p>
+</div>
+<div class="sect1">
+<h2 id="_understanding_openshift_installer_permissions"><a class="anchor" href="#_understanding_openshift_installer_permissions"></a>Understanding OpenShift Installer Permissions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you deploy OpenShift on AWS using the Installer-Provisioned Infrastructure (IPI) method, the installer (typically executed from a bastion host or your local machine) interacts with the AWS API to create a wide array of resources. These include:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>EC2 Instances:</strong> For control plane (masters), worker nodes, and bootstrap nodes.</p>
+</li>
+<li>
+<p><strong>VPC Components:</strong> Such as VPCs, subnets, route tables, Internet Gateways (IGW), NAT Gateways, Security Groups, and Network Interfaces.</p>
+</li>
+<li>
+<p><strong>S3 Buckets:</strong> For storing bootstrap assets, OpenShift cluster manifests, and other cluster-related data.</p>
+</li>
+<li>
+<p><strong>IAM Roles and Policies:</strong> The installer creates roles and policies for the cluster&#8217;s control plane and worker nodes, allowing them to interact with AWS services.</p>
+</li>
+<li>
+<p><strong>Route 53:</strong> For managing DNS records crucial for internal and external cluster access.</p>
+</li>
+<li>
+<p><strong>Elastic Load Balancers (ELB):</strong> Application Load Balancers (ALBs) and Network Load Balancers (NLBs) for cluster services.</p>
+</li>
+<li>
+<p><strong>Elastic Block Storage (EBS):</strong> Volumes for EC2 instances.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To perform these actions, the IAM identity used by the OpenShift installer must be granted appropriate permissions. While it&#8217;s always recommended to follow the principle of least privilege, for the purpose of an initial deployment in a lab environment, we will create a comprehensive policy that covers all necessary permissions.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_required_iam_policy_details"><a class="anchor" href="#_required_iam_policy_details"></a>Required IAM Policy Details</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following IAM policy provides the necessary permissions for the OpenShift installer to successfully deploy a cluster on AWS. This policy grants permissions across various AWS services.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AssociateAddress",
+                "ec2:AssociateDhcpOptions",
+                "ec2:AssociateRouteTable",
+                "ec2:AttachInternetGateway",
+                "ec2:AttachVolume",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:CancelSpotInstanceRequests",
+                "ec2:CreateDhcpOptions",
+                "ec2:CreateInternetGateway",
+                "ec2:CreateKeyPair",
+                "ec2:CreateLaunchTemplate",
+                "ec2:CreateNatGateway",
+                "ec2:CreateNetworkAcl",
+                "ec2:CreateNetworkAclEntry",
+                "ec2:CreatePlacementGroup",
+                "ec2:CreateRoute",
+                "ec2:CreateRouteTable",
+                "ec2:CreateSecurityGroup",
+                "ec2:CreateSnapshot",
+                "ec2:CreateSpotDatafeedSubscription",
+                "ec2:CreateSubnet",
+                "ec2:CreateTags",
+                "ec2:CreateTrafficMirrorFilter",
+                "ec2:CreateTrafficMirrorFilterRule",
+                "ec2:CreateTrafficMirrorSession",
+                "ec2:CreateTrafficMirrorTarget",
+                "ec2:CreateVolume",
+                "ec2:CreateVpc",
+                "ec2:CreateVpcEndpoint",
+                "ec2:CreateVpcEndpointServiceConfiguration",
+                "ec2:DeleteDhcpOptions",
+                "ec2:DeleteInternetGateway",
+                "ec2:DeleteKeyPair",
+                "ec2:DeleteLaunchTemplate",
+                "ec2:DeleteNatGateway",
+                "ec2:DeleteNetworkAcl",
+                "ec2:DeleteNetworkAclEntry",
+                "ec2:DeletePlacementGroup",
+                "ec2:DeleteRoute",
+                "ec2:DeleteRouteTable",
+                "ec2:DeleteSecurityGroup",
+                "ec2:DeleteSnapshot",
+                "ec2:DeleteSpotDatafeedSubscription",
+                "ec2:DeleteSubnet",
+                "ec2:DeleteTags",
+                "ec2:DeleteVolume",
+                "ec2:DeleteVpc",
+                "ec2:DeleteVpcEndpoint",
+                "ec2:DeleteVpcEndpointServiceConfigurations",
+                "ec2:Describe*",
+                "ec2:DetachInternetGateway",
+                "ec2:DetachVolume",
+                "ec2:DisableVpcEndpointServicePrivateDnsName",
+                "ec2:DisassociateAddress",
+                "ec2:DisassociateRouteTable",
+                "ec2:EnableVpcEndpointServicePrivateDnsName",
+                "ec2:ImportKeyPair",
+                "ec2:Modify*",
+                "ec2:MonitorInstances",
+                "ec2:ReleaseAddress",
+                "ec2:ReplaceNetworkAclEntry",
+                "ec2:ReplaceRoute",
+                "ec2:ReplaceRouteTableAssociation",
+                "ec2:RequestSpotInstances",
+                "ec2:RevokeSecurityGroupEgress",
+                "ec2:RevokeSecurityGroupIngress",
+                "ec2:RunInstances",
+                "ec2:StartInstances",
+                "ec2:StopInstances",
+                "ec2:TerminateInstances"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:AddRoleToInstanceProfile",
+                "iam:AttachRolePolicy",
+                "iam:CreateInstanceProfile",
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:CreateRole",
+                "iam:DeleteInstanceProfile",
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "iam:DeleteRole",
+                "iam:DetachRolePolicy",
+                "iam:GetContextKeysForPrincipalPolicy",
+                "iam:GetInstanceProfile",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:ListInstanceProfiles",
+                "iam:ListInstanceProfilesForRole",
+                "iam:ListPolicies",
+                "iam:ListPolicyVersions",
+                "iam:ListRolePolicies",
+                "iam:ListRoles",
+                "iam:PassRole",
+                "iam:PutRolePolicy",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:SetDefaultPolicyVersion",
+                "iam:SimulatePrincipalPolicy",
+                "iam:TagInstanceProfile",
+                "iam:TagRole",
+                "iam:UntagInstanceProfile",
+                "iam:UntagRole",
+                "iam:UpdateAssumeRolePolicy",
+                "iam:UpdateInstanceProfile",
+                "iam:UpdateRole",
+                "iam:UpdateRoleDescription"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:DeleteObject",
+                "s3:GetBucketAcl",
+                "s3:GetBucketLocation",
+                "s3:GetBucketPolicy",
+                "s3:GetObject",
+                "s3:ListBucket",
+                "s3:PutBucketAcl",
+                "s3:PutBucketPolicy",
+                "s3:PutObject"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "route53:AssociateVPCWithHostedZone",
+                "route53:ChangeResourceRecordSets",
+                "route53:ChangeTagsForResource",
+                "route53:CreateHostedZone",
+                "route53:DeleteHostedZone",
+                "route53:DisassociateVPCFromHostedZone",
+                "route53:GetChange",
+                "route53:GetHostedZone",
+                "route53:ListHostedZones",
+                "route53:ListHostedZonesByName",
+                "route53:ListResourceRecordSets",
+                "route53:ListTagsForResource",
+                "route53:TestDNSAnswer"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:CreateLoadBalancer",
+                "elasticloadbalancing:CreateTargetGroup",
+                "elasticloadbalancing:DeleteLoadBalancer",
+                "elasticloadbalancing:DeleteTargetGroup",
+                "elasticloadbalancing:DeregisterTargets",
+                "elasticloadbalancing:Describe*",
+                "elasticloadbalancing:ModifyLoadBalancerAttributes",
+                "elasticloadbalancing:ModifyTargetGroup",
+                "elasticloadbalancing:ModifyTargetGroupAttributes",
+                "elasticloadbalancing:RegisterTargets",
+                "elasticloadbalancing:SetIpAddressType",
+                "elasticloadbalancing:SetSecurityGroups",
+                "elasticloadbalancing:SetSubnets"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "tag:GetResources",
+                "tag:TagResources",
+                "tag:UntagResources"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole"
+            ],
+            "Resource": "*"
+        }
+    ]
+}</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+While this policy uses <code>Resource: "*"</code>, which is broad, it simplifies the lab setup. In production environments, it&#8217;s highly recommended to scope down permissions to specific resources using ARNs and condition keys where possible to adhere to the principle of least privilege.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hands_on_activity_creating_the_iam_policy"><a class="anchor" href="#_hands_on_activity_creating_the_iam_policy"></a>Hands-On Activity: Creating the IAM Policy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You will now create a custom IAM policy in your AWS account using the provided JSON document.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_1_navigate_to_iam_policies"><a class="anchor" href="#_step_1_navigate_to_iam_policies"></a>Step 1: Navigate to IAM Policies</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Log in to the AWS Management Console with an administrative user.</p>
+</li>
+<li>
+<p>In the search bar at the top, type <code>IAM</code> and select <strong>IAM</strong> from the services list.</p>
+</li>
+<li>
+<p>In the IAM dashboard, navigate to the left-hand menu and click on <strong>Policies</strong>.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>image::images/iam-policies-menu.png[IAM Policies Menu, 600] // Placeholder image reference</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_create_a_new_policy"><a class="anchor" href="#_step_2_create_a_new_policy"></a>Step 2: Create a New Policy</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>On the Policies page, click the blue <strong>Create policy</strong> button.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>image::images/create-policy-button.png[Create Policy Button, 600] // Placeholder image reference</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>On the "Create policy" page, select the <strong>JSON</strong> tab.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>image::images/policy-json-tab.png[Policy JSON Tab, 600] // Placeholder image reference</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Copy the entire JSON policy provided above and paste it into the text area, replacing any existing content.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>image::images/paste-json-policy.png[Paste JSON Policy, 600] // Placeholder image reference</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click the <strong>Next: Tags</strong> button.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_add_tags_optional"><a class="anchor" href="#_step_3_add_tags_optional"></a>Step 3: Add Tags (Optional)</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>(Optional) You can add tags to help organize and identify your IAM resources. For example:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Key:</strong> <code>Environment</code>, <strong>Value:</strong> <code>Development</code></p>
+</li>
+<li>
+<p><strong>Key:</strong> <code>Project</code>, <strong>Value:</strong> <code>OpenShift</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Click the <strong>Next: Review</strong> button.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_review_and_create_policy"><a class="anchor" href="#_step_4_review_and_create_policy"></a>Step 4: Review and Create Policy</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>On the "Review policy" page, enter the following details:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Policy name:</strong> <code>OpenshiftInstallerPolicy</code></p>
+</li>
+<li>
+<p><strong>Description (Optional):</strong> <code>Grants necessary permissions for the OpenShift installer to provision resources on AWS.</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Review the policy summary to ensure it matches your intentions.</p>
+</li>
+<li>
+<p>Click the <strong>Create policy</strong> button.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>image::images/review-create-policy.png[Review and Create Policy, 600] // Placeholder image reference</p>
+</div>
+<div class="paragraph">
+<p>You have now successfully created the <code>OpenshiftInstallerPolicy</code>. This policy will be attached to an IAM role in the next section, which the OpenShift installer will then assume to perform its operations.</p>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="what-permissions-are-required.html">What Permissions are Required?</a></span>
+  <span class="next"><a href="create-iam-role.html">Create IAM Role</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

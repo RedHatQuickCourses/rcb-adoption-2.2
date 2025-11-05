@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Create IAM Role :: OCP on AWS Hands-On Lab</title>
+    <link rel="prev" href="create-iam-policies.html">
+    <link rel="next" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OCP on AWS Hands-On Lab</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rcb-adoption-2.2" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OCP on AWS Hands-On Lab</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../pre-requisite-setup/pre-requisite-setup.html">Pre-requisite setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/provision-aws-blank-environment.html">Provision AWS Blank Environment</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/deploy-vpc-resources.html">Deploy VPC Resources</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="what-permissions-are-required.html">What Permissions are Required?</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="create-iam-policies.html">Create IAM Policies</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="create-iam-role.html">Create IAM Role</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OCP on AWS Hands-On Lab</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OCP on AWS Hands-On Lab</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OCP on AWS Hands-On Lab</a></li>
+    <li><a href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a></li>
+    <li><a href="create-iam-role.html">Create IAM Role</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Create IAM Role</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section guides you through the creation of an AWS Identity and Access Management (IAM) role specifically designed for the OpenShift installer. This role will encapsulate all the necessary permissions for the <code>openshift-install</code> command-line tool to provision the required AWS infrastructure for your OpenShift cluster.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_iam_role"><a class="anchor" href="#_create_iam_role"></a>Create IAM Role</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The OpenShift installer needs to interact with various AWS services to set up the cluster&#8217;s infrastructure, including EC2 instances, VPC, S3 buckets, Route 53, and more. Rather than attaching these extensive permissions directly to an IAM user (which can be a security risk), the recommended practice is to create an IAM role. This role consolidates all the necessary permissions, which can then be assumed by an authorized IAM user or service. This approach enhances security by allowing the permissions to be granted temporarily and centrally managed.</p>
+</div>
+<div class="paragraph">
+<p>In this step, you will create an IAM role that the OpenShift installer will assume to provision your cluster resources.</p>
+</div>
+<div class="sect2">
+<h3 id="_technical_explanation"><a class="anchor" href="#_technical_explanation"></a>Technical Explanation</h3>
+<div class="paragraph">
+<p>An IAM role is an IAM identity that you can create in your account that has specific permissions. IAM roles are similar to IAM users in that they are AWS identities with permission policies that determine what the identity can and cannot do in AWS. However, instead of being uniquely associated with one person, a role is intended to be assumable by anyone who needs it. When an entity assumes a role, it temporarily receives security credentials that can be used to make API calls to AWS.</p>
+</div>
+<div class="paragraph">
+<p>For the OpenShift installer, we&#8217;ll create a role that:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Has a Trust Policy:</strong> This policy specifies <strong>who</strong> is allowed to assume the role. For our lab, this will typically be an IAM user within your AWS account.</p>
+</li>
+<li>
+<p><strong>Has Permissions Policies Attached:</strong> These are the policies you created in the previous step, defining <strong>what</strong> actions the role can perform across AWS services (e.g., creating EC2 instances, S3 buckets, modifying Route 53 records).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By creating this role, we centralize the permissions required for the installation process, making it easier to manage and audit.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_hands_on_activity_create_the_openshift_installer_role"><a class="anchor" href="#_hands_on_activity_create_the_openshift_installer_role"></a>Hands-on Activity: Create the Openshift Installer Role</h3>
+<div class="paragraph">
+<p>Follow these steps to create the IAM role for the OpenShift installer.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Navigate to the AWS IAM Console
+<strong>AWS Management Console</strong> &#8594; Search for <code>IAM</code> &#8594; Select <strong>IAM</strong></p>
+</li>
+<li>
+<p>In the navigation pane, choose <strong>Roles</strong>, then select <strong>Create role</strong>.</p>
+</li>
+<li>
+<p><strong>Select trusted entity</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>For <strong>Trusted entity type</strong>, select <code>AWS account</code>.</p>
+</li>
+<li>
+<p>For <strong>An AWS account</strong>, choose <code>This account</code>.</p>
+</li>
+<li>
+<p><strong>(Optional but recommended for production)</strong> If you plan to assume this role from an EC2 instance that uses an Instance Profile, you might choose <code>AWS service</code> and then <code>EC2</code> as the use case. However, for a user-driven installation, <code>AWS account</code> is more flexible as it allows an IAM user to assume it.</p>
+</li>
+<li>
+<p>Leave the <code>Require external ID</code> and <code>Require MFA</code> options unchecked for simplicity in this lab environment. In a production environment, you might consider enabling these for enhanced security.</p>
+</li>
+<li>
+<p>Click <strong>Next</strong>.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Add permissions</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>In the <strong>Add permissions</strong> section, search for and select the custom IAM policies you created in the previous section. For example:</p>
+</li>
+<li>
+<p><code>openshift-installer-policy</code> (or similar name you chose for general installer permissions)</p>
+</li>
+<li>
+<p><code>openshift-installer-s3-policy</code> (or similar name you chose for S3 bucket permissions)</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you used different names for your policies, ensure you select the correct ones. These policies grant the necessary permissions for the OpenShift installer.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Click <strong>Next</strong>.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Name, review, and create</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>For <strong>Role name</strong>, enter <code>OpenshiftInstallerRole</code>.</p>
+</li>
+<li>
+<p>For <strong>Description</strong>, enter a meaningful description, such as: <code>IAM role for OpenShift installer to provision AWS infrastructure.</code></p>
+</li>
+<li>
+<p>Review the policies attached and the trust policy.</p>
+</li>
+<li>
+<p>Click <strong>Create role</strong>.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Verify the Role</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Once the role is created, search for <code>OpenshiftInstallerRole</code> in the IAM Roles list and click on it.</p>
+</li>
+<li>
+<p>Verify that the <code>Permissions</code> tab displays the custom policies you attached.</p>
+</li>
+<li>
+<p>Go to the <code>Trust relationships</code> tab. It should show a policy similar to the following (allowing principals in your AWS account to assume the role):</p>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:root" <i class="conum" data-value="1"></i><b>(1)</b>
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}</code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Replace <code>YOUR_AWS_ACCOUNT_ID</code> with your actual 12-digit AWS account ID. This policy allows any IAM user or role within your AWS account with <code>sts:AssumeRole</code> permissions to assume this role. For stricter security, you would specify the ARN of a specific IAM user or another role here.</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p><strong>Record the Role ARN:</strong> Make a note of the <code>Role ARN</code> displayed on the role summary page. You will need this ARN later when configuring the OpenShift installer environment on your Jump Host to assume this role.</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The Role ARN will look something like <code>arn:aws:iam::123456789012:role/OpenshiftInstallerRole</code>. Keep this handy!
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You have now successfully created the IAM role for the OpenShift installer, consolidating all the necessary permissions into a single, manageable entity. In subsequent steps, you will deploy a Jump Host and configure it to use this role for the OpenShift installation.</p>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="create-iam-policies.html">Create IAM Policies</a></span>
+  <span class="next"><a href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

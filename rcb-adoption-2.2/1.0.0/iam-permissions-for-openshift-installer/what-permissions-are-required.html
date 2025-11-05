@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>What Permissions are Required? :: OCP on AWS Hands-On Lab</title>
+    <link rel="prev" href="iam-permissions-for-openshift-installer.html">
+    <link rel="next" href="create-iam-policies.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OCP on AWS Hands-On Lab</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rcb-adoption-2.2" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OCP on AWS Hands-On Lab</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../pre-requisite-setup/pre-requisite-setup.html">Pre-requisite setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/provision-aws-blank-environment.html">Provision AWS Blank Environment</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/deploy-vpc-resources.html">Deploy VPC Resources</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="what-permissions-are-required.html">What Permissions are Required?</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="create-iam-policies.html">Create IAM Policies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="create-iam-role.html">Create IAM Role</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../deploy-ec2-jump-host/deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OCP on AWS Hands-On Lab</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OCP on AWS Hands-On Lab</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OCP on AWS Hands-On Lab</a></li>
+    <li><a href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a></li>
+    <li><a href="what-permissions-are-required.html">What Permissions are Required?</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">What Permissions are Required?</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>The successful deployment of OpenShift Container Platform (OCP) on Amazon Web Services (AWS) hinges on correctly configured AWS Identity and Access Management (IAM) permissions. The OpenShift installer, as well as the cluster&#8217;s internal components, require specific permissions to provision, manage, and operate AWS resources on your behalf.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="why-iam-permissions"><a class="anchor" href="#why-iam-permissions"></a>Why IAM Permissions are Critical</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When you deploy OpenShift on AWS, the <code>openshift-install</code> program acts as a control plane for your infrastructure. It needs programmatic access to your AWS account to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Create core networking components like Virtual Private Clouds (VPCs), subnets, route tables, and Internet Gateways.</p>
+</li>
+<li>
+<p>Launch Amazon EC2 instances for control plane (master) and worker nodes.</p>
+</li>
+<li>
+<p>Configure Elastic Load Balancers (ELBs) for API and application ingress.</p>
+</li>
+<li>
+<p>Provision Amazon Elastic Block Store (EBS) volumes for persistent storage.</p>
+</li>
+<li>
+<p>Manage Amazon S3 buckets for the internal image registry and bootstrap assets.</p>
+</li>
+<li>
+<p>Configure Amazon Route 53 records for internal and external DNS resolution.</p>
+</li>
+<li>
+<p>Create and manage other AWS services as required by the cluster operators.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>After the initial installation, the OpenShift cluster&#8217;s internal components (Kubernetes control plane, cluster operators, and applications) continue to interact with AWS services. For example, the cloud controller manager might provision new load balancers for <code>Service</code> objects of type <code>LoadBalancer</code>, or provision EBS volumes for <code>PersistentVolumeClaims</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="iam-entities-requiring-permissions"><a class="anchor" href="#iam-entities-requiring-permissions"></a>IAM Entities Requiring Permissions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Two primary IAM entities require permissions for an OpenShift on AWS deployment:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>The IAM entity executing <code>openshift-install</code></strong>: This is typically an an AWS IAM User or an IAM Role that you assume when running the <code>openshift-install</code> command from your local machine or a jump host. This entity needs extensive permissions to create the initial AWS infrastructure.</p>
+</li>
+<li>
+<p><strong>The EC2 Instance Profiles for OpenShift Nodes</strong>: These are IAM Roles attached to the EC2 instances that form your OpenShift cluster (control plane nodes and worker nodes). These roles grant permissions to the instances themselves, allowing OpenShift components running on them to interact with AWS services <strong>after</strong> the cluster is deployed. For example, worker nodes might need permissions to pull images from ECR (if used), or control plane nodes might need permissions to manage EBS volumes or ELBs.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="required-aws-services"><a class="anchor" href="#required-aws-services"></a>Required AWS Service Permissions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The OpenShift installer and the deployed cluster interact with a broad set of AWS services. Below is a breakdown of the key services for which permissions are required:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Amazon EC2</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Instances: <code>ec2:RunInstances</code>, <code>ec2:StopInstances</code>, <code>ec2:TerminateInstances</code>, <code>ec2:Describe*</code></p>
+</li>
+<li>
+<p>Volumes: <code>ec2:CreateVolume</code>, <code>ec2:AttachVolume</code>, <code>ec2:DetachVolume</code>, <code>ec2:DeleteVolume</code>, <code>ec2:ModifyVolume</code></p>
+</li>
+<li>
+<p>Security Groups: <code>ec2:CreateSecurityGroup</code>, <code>ec2:DeleteSecurityGroup</code>, <code>ec2:AuthorizeSecurityGroupIngress</code>, <code>ec2:RevokeSecurityGroupIngress</code>, <code>ec2:AuthorizeSecurityGroupEgress</code>, <code>ec2:RevokeSecurityGroupEgress</code></p>
+</li>
+<li>
+<p>Key Pairs: <code>ec2:CreateKeyPair</code>, <code>ec2:DeleteKeyPair</code></p>
+</li>
+<li>
+<p>Instance Types: <code>ec2:DescribeInstanceTypes</code></p>
+</li>
+<li>
+<p>Spot Instances: <code>ec2:RequestSpotInstances</code>, <code>ec2:CancelSpotInstanceRequests</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Amazon VPC</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>VPCs: <code>ec2:CreateVpc</code>, <code>ec2:DeleteVpc</code>, <code>ec2:ModifyVpcAttribute</code></p>
+</li>
+<li>
+<p>Subnets: <code>ec2:CreateSubnet</code>, <code>ec2:DeleteSubnet</code>, <code>ec2:ModifySubnetAttribute</code></p>
+</li>
+<li>
+<p>Internet Gateways: <code>ec2:CreateInternetGateway</code>, <code>ec2:DeleteInternetGateway</code>, <code>ec2:AttachInternetGateway</code>, <code>ec2:DetachInternetGateway</code></p>
+</li>
+<li>
+<p>Route Tables: <code>ec2:CreateRouteTable</code>, <code>ec2:DeleteRouteTable</code>, <code>ec2:CreateRoute</code>, <code>ec2:ReplaceRoute</code>, <code>ec2:DeleteRoute</code>, <code>ec2:AssociateRouteTable</code>, <code>ec2:DisassociateRouteTable</code></p>
+</li>
+<li>
+<p>Network Interfaces: <code>ec2:CreateNetworkInterface</code>, <code>ec2:DeleteNetworkInterface</code>, <code>ec2:AttachNetworkInterface</code>, <code>ec2:DetachNetworkInterface</code></p>
+</li>
+<li>
+<p>Egress-only Internet Gateways (EIGW): <code>ec2:CreateEgressOnlyInternetGateway</code>, <code>ec2:DeleteEgressOnlyInternetGateway</code> (for IPv6 deployments)</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Elastic Load Balancing (ELB)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Classic Load Balancers (CLB): <code>elasticloadbalancing:CreateLoadBalancer</code>, <code>elasticloadbalancing:DeleteLoadBalancer</code>, <code>elasticloadbalancing:RegisterInstancesWithLoadBalancer</code>, <code>elasticloadbalancing:DeregisterInstancesFromLoadBalancer</code></p>
+</li>
+<li>
+<p>Application Load Balancers (ALB) / Network Load Balancers (NLB): <code>elasticloadbalancing:CreateLoadBalancer</code>, <code>elasticloadbalancing:DeleteLoadBalancer</code>, <code>elasticloadbalancing:CreateTargetGroup</code>, <code>elasticloadbalancing:DeleteTargetGroup</code>, <code>elasticloadbalancing:RegisterTargets</code>, <code>elasticloadbalancing:DeregisterTargets</code>, <code>elasticloadbalancing:CreateListener</code>, <code>elasticloadbalancing:DeleteListener</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Amazon S3</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Buckets: <code>s3:CreateBucket</code>, <code>s3:DeleteBucket</code>, <code>s3:PutBucketVersioning</code>, <code>s3:PutBucketOwnershipControls</code>, <code>s3:PutObjectAcl</code>, <code>s3:PutEncryptionConfiguration</code></p>
+</li>
+<li>
+<p>Objects: <code>s3:PutObject</code>, <code>s3:GetObject</code>, <code>s3:DeleteObject</code>, <code>s3:ListBucket</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Amazon Route 53</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Hosted Zones: <code>route53:CreateHostedZone</code>, <code>route53:DeleteHostedZone</code></p>
+</li>
+<li>
+<p>Record Sets: <code>route53:ChangeResourceRecordSets</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>AWS Identity and Access Management (IAM)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Roles: <code>iam:CreateRole</code>, <code>iam:DeleteRole</code>, <code>iam:PassRole</code></p>
+</li>
+<li>
+<p>Policies: <code>iam:CreatePolicy</code>, <code>iam:DeletePolicy</code>, <code>iam:AttachRolePolicy</code>, <code>iam:DetachRolePolicy</code></p>
+</li>
+<li>
+<p>Instance Profiles: <code>iam:CreateInstanceProfile</code>, <code>iam:DeleteInstanceProfile</code>, <code>iam:AddRoleToInstanceProfile</code>, <code>iam:RemoveRoleFromInstanceProfile</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>AWS Key Management Service (KMS)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Keys: <code>kms:CreateKey</code>, <code>kms:ScheduleKeyDeletion</code>, <code>kms:DescribeKey</code>, <code>kms:Encrypt</code>, <code>kms:Decrypt</code>, <code>kms:GenerateDataKey</code> (if using encrypted EBS volumes or S3 buckets)</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>AWS Security Token Service (STS)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>sts:AssumeRole</code>: To allow entities to assume specific IAM roles.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>AWS CloudFormation</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Stacks: <code>cloudformation:CreateStack</code>, <code>cloudformation:DeleteStack</code>, <code>cloudformation:DescribeStacks</code> (though OpenShift primarily uses direct API calls, some components might use CFN).</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Tagging</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Resources: <code>ec2:CreateTags</code>, <code>ec2:DeleteTags</code>, <code>s3:PutBucketTagging</code>, <code>elasticloadbalancing:AddTags</code>, <code>route53:AssociateVPCWithHostedZone</code> (essential for resource management and cost allocation).</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In addition to these, various <code>Describe*</code> permissions are needed across almost all services for the installer and cluster components to inspect the state of existing resources.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="principle-of-least-privilege"><a class="anchor" href="#principle-of-least-privilege"></a>Adhering to the Principle of Least Privilege</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While the OpenShift installer needs a broad set of permissions initially, Red Hat provides specific, finely-tuned IAM policies that adhere to the principle of least privilege. These policies ensure that entities only have the permissions necessary to perform their required functions, minimizing the security risk.</p>
+</div>
+<div class="paragraph">
+<p>In the subsequent sections, you will learn how to create these precise IAM policies and roles for your OpenShift on AWS deployment.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a></span>
+  <span class="next"><a href="create-iam-policies.html">Create IAM Policies</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

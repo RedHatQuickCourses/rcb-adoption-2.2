@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Deploy EC2 Jump Host :: OCP on AWS Hands-On Lab</title>
+    <link rel="prev" href="../iam-permissions-for-openshift-installer/create-iam-role.html">
+    <link rel="next" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OCP on AWS Hands-On Lab</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/REPLACEREPONAME/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rcb-adoption-2.2" data-version="1.0.0">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OCP on AWS Hands-On Lab</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../LABENV/index.html">Lab Environment</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../pre-requisite-setup/pre-requisite-setup.html">Pre-requisite setup</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/provision-aws-blank-environment.html">Provision AWS Blank Environment</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../pre-requisite-setup/deploy-vpc-resources.html">Deploy VPC Resources</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../iam-permissions-for-openshift-installer/iam-permissions-for-openshift-installer.html">IAM Permissions for Openshift Installer</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../iam-permissions-for-openshift-installer/what-permissions-are-required.html">What Permissions are Required?</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../iam-permissions-for-openshift-installer/create-iam-policies.html">Create IAM Policies</a>
+  </li>
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../iam-permissions-for-openshift-installer/create-iam-role.html">Create IAM Role</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="2">
+    <a class="nav-link" href="deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../appendix/appendix.html">Appendix</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OCP on AWS Hands-On Lab</span>
+    <span class="version">1.0.0</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OCP on AWS Hands-On Lab</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">1.0.0</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OCP on AWS Hands-On Lab</a></li>
+    <li><a href="deploy-ec2-jump-host.html">Deploy EC2 Jump Host</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Deploy EC2 Jump Host</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>A jump host, also known as a bastion host, is an EC2 instance deployed as a secure intermediary to access private resources within your AWS VPC. This host acts as a gateway, allowing administrators to securely connect to other instances, such as those forming an OpenShift cluster, that reside in private subnets. For OCP on AWS, the jump host facilitates access to core cluster components without exposing them directly to the public internet. Deployment involves:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Launching a Linux-based EC2 instance in a public subnet.</p>
+</li>
+<li>
+<p>Configuring its security group to allow SSH access from trusted IP addresses.</p>
+</li>
+<li>
+<p>Installing necessary tools like the OpenShift CLI (<code>oc</code>) and AWS CLI.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>It is a critical component for securely managing and interacting with your OCP environment.#  Deploy EC2 Jump Host</p>
+</div>
+</div>
+</div>
+<h1 id="_deploy_ec2_jump_host" class="sect0"><a class="anchor" href="#_deploy_ec2_jump_host"></a>Deploy EC2 Jump Host</h1>
+<div class="paragraph">
+<p>In the intricate process of deploying OpenShift Container Platform (OCP) on AWS, a <strong>Jump Host</strong> (often referred to as a Bastion Host) plays an indispensable role. It acts as a secure, intermediary server, providing a single, controlled access point into your private network resources, including the forthcoming OCP cluster. This centralized point is critical for both security and operational efficiency.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>While "Bastion EC2" is another common term, "Jump Host" more precisely describes its function in this context – facilitating a secure "jump" from an external, less trusted network into a more secure, internal network to manage resources that are otherwise isolated.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect1">
+<h2 id="_what_is_a_jump_host_and_why_do_we_need_one"><a class="anchor" href="#_what_is_a_jump_host_and_why_do_we_need_one"></a>What is a Jump Host and Why Do We Need One?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A jump host is a dedicated server strategically placed at the edge of your private network, typically residing in a public subnet. It is meticulously configured with very strict security rules to fulfill several vital functions:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Secure and Controlled Access:</strong> Its primary purpose is to establish a hardened and monitored entry point to private network resources (such as your OCP cluster nodes) that are intentionally designed <strong>without</strong> direct internet access. Instead of exposing multiple sensitive components to the public internet, you expose only the jump host, which then brokers secure connections.</p>
+</li>
+<li>
+<p><strong>Centralized Management Hub:</strong> The jump host serves as the designated location to execute OpenShift installer commands, store critical configuration files, and interact with the cluster using command-line tools like the <code>oc</code> CLI. This centralizes management operations and standardizes the deployment environment.</p>
+</li>
+<li>
+<p><strong>Tooling Repository:</strong> It provides a platform to install and configure all necessary command-line tools (e.g., <code>aws-cli</code>, <code>openshift-install</code>, <code>oc</code> CLI, <code>jq</code>, <code>yq</code>, <code>git</code>) that are essential for the OCP deployment and subsequent ongoing management.</p>
+</li>
+<li>
+<p><strong>Debugging and Troubleshooting Gateway:</strong> During the initial deployment and for ongoing maintenance, the jump host offers a secure vantage point from which to SSH into individual OCP cluster nodes for diagnostics and troubleshooting, without exposing those nodes directly to the wider internet.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For our OCP deployment on AWS, the jump host will be an EC2 instance carefully provisioned and configured to meet these operational and security requirements.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_hands_on_activity_deploy_an_ec2_jump_host"><a class="anchor" href="#_hands_on_activity_deploy_an_ec2_jump_host"></a>Hands-on Activity: Deploy an EC2 Jump Host</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this activity, you will launch an EC2 instance that will serve as our dedicated jump host for the OpenShift deployment.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Before proceeding, ensure you have successfully completed the "Provision AWS Blank Environment" and "Deploy VPC Resources" prerequisites. You will need your created VPC ID and the ID of your designated Public Subnet.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_step_1_navigate_to_the_ec2_dashboard"><a class="anchor" href="#_step_1_navigate_to_the_ec2_dashboard"></a>Step 1: Navigate to the EC2 Dashboard</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Log in to the AWS Management Console.</p>
+</li>
+<li>
+<p>Use the search bar at the top or navigate through "Services" &#8594; "Compute" to find and click on <strong>EC2</strong>.</p>
+</li>
+<li>
+<p>Verify that you are operating in the correct AWS Region where you provisioned your VPC.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_launch_an_ec2_instance"><a class="anchor" href="#_step_2_launch_an_ec2_instance"></a>Step 2: Launch an EC2 Instance</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>From the EC2 dashboard, click the <strong>Launch instances</strong> button.</p>
+</li>
+<li>
+<p><strong>Name and tags</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>In the "Name" field, enter <code>ocp-jump-host</code>.</p>
+</li>
+<li>
+<p>You are encouraged to add additional descriptive tags as per your organization&#8217;s tagging strategy.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Application and OS Images (Amazon Machine Image - AMI)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Search for and select <strong>Amazon Linux 2023 AMI</strong> (or Amazon Linux 2 AMI if 2023 is not preferred/available). This choice provides a stable, secure, and well-supported Linux base with essential tools.</p>
+</li>
+<li>
+<p>Architecture: Retain the default <code>64-bit (x86)</code>.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Instance type</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Select <code>t3.medium</code> or <code>t3.large</code>. A <code>t3.medium</code> is generally sufficient for the OpenShift installer, but a <code>t3.large</code> offers additional CPU and memory headroom for more demanding tasks or future expansions.</p>
+</li>
+<li>
+<p>If <code>t3</code> instances are not available or if you are specifically trying to adhere to AWS Free Tier limits, a <code>t2.medium</code> could be used but may result in slower operations.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Key pair (login)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>An SSH key pair is essential for securely connecting to your instance.</p>
+</li>
+<li>
+<p>If you have an existing key pair whose <code>.pem</code> file you possess and can access, select it from the dropdown.</p>
+</li>
+<li>
+<p>If not, select <strong>Create a new key pair</strong>.</p>
+</li>
+<li>
+<p>Provide a "Key pair name", for example, <code>ocp-jump-host-key</code>.</p>
+</li>
+<li>
+<p>Choose "RSA" for "Key pair type".</p>
+</li>
+<li>
+<p>Select ".pem" for "Private key file format".</p>
+</li>
+<li>
+<p>Click <strong>Create key pair</strong>. Your browser will download the <code>.pem</code> file. <strong>It is crucial to store this file securely and remember its location, as it is your sole credential for accessing the jump host.</strong></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Network settings</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Click <strong>Edit</strong> next to "Network settings".</p>
+</li>
+<li>
+<p><strong>VPC</strong>: From the dropdown, select the VPC you created during the "Deploy VPC Resources" prerequisite (e.g., <code>ocp-vpc</code>).</p>
+</li>
+<li>
+<p><strong>Subnet</strong>: Choose the <strong>public subnet</strong> within your VPC (e.g., <code>ocp-public-subnet-az1</code>). This is where the jump host will reside.</p>
+</li>
+<li>
+<p><strong>Auto-assign Public IP</strong>: Ensure this setting is <strong>Enable</strong>. This will assign a public IPv4 address to your jump host, allowing you to connect to it from the internet.</p>
+</li>
+<li>
+<p><strong>Firewall (security groups)</strong>:</p>
+</li>
+<li>
+<p>Select <strong>Create security group</strong>.</p>
+</li>
+<li>
+<p><strong>Security group name</strong>: Enter <code>ocp-jump-host-sg</code>.</p>
+</li>
+<li>
+<p><strong>Description</strong>: Provide a clear description, e.g., <code>Security group for OCP Jump Host allowing SSH access</code>.</p>
+</li>
+<li>
+<p><strong>Inbound security group rules</strong>:</p>
+</li>
+<li>
+<p>Add a new rule:</p>
+</li>
+<li>
+<p><strong>Type</strong>: Select <code>SSH</code>. This automatically sets the protocol to TCP and port range to 22.</p>
+</li>
+<li>
+<p><strong>Source type</strong>: Select <code>My IP</code>. AWS will auto-detect your current public IP address and configure the rule to allow SSH traffic <strong>only</strong> from your current location. This is the <strong>most secure</strong> option for a jump host.</p>
+</li>
+<li>
+<p>[WARNING]
+For production environments, <strong>never</strong> use <code>0.0.0.0/0</code> (Anywhere) for SSH access unless absolutely necessary and coupled with other stringent security controls. If your IP changes frequently or you need access from multiple specific locations, you can use <code>Custom</code> and specify a CIDR block that encompasses your allowed IP ranges. For this lab, <code>My IP</code> is ideal.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Configure storage (volumes)</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The default storage configuration (e.g., 8 GiB gp2/gp3) is generally adequate for the operating system and initial tooling. If you anticipate storing large installer assets, extensive logs, or additional software, you might consider increasing this to 20-50 GiB.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Advanced details</strong>:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>For the purpose of this deployment, you can leave these settings at their default values.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Summary</strong>: Carefully review all the configuration settings on the summary panel.</p>
+</li>
+<li>
+<p>Click <strong>Launch instance</strong>.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_3_verify_the_ec2_instance_state"><a class="anchor" href="#_step_3_verify_the_ec2_instance_state"></a>Step 3: Verify the EC2 Instance State</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>After clicking "Launch instance", you will see a confirmation page. Click <strong>View all instances</strong>.</p>
+</li>
+<li>
+<p>Locate your <code>ocp-jump-host</code> instance in the list.</p>
+</li>
+<li>
+<p>Monitor the "Instance state" column. It will initially show <code>pending</code> and then transition to <code>running</code>. Wait for the "Status checks" column to display <code>2/2 checks passed</code>. This process may take a few minutes.</p>
+</li>
+<li>
+<p>Once the instance is running and checks have passed, make a note of its <strong>Public IPv4 address</strong>. You will use this address to connect via SSH.</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_4_connect_to_your_jump_host"><a class="anchor" href="#_step_4_connect_to_your_jump_host"></a>Step 4: Connect to Your Jump Host</h3>
+<div class="paragraph">
+<p>With your jump host successfully launched and running, the next step is to establish a secure SSH connection to it.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open a terminal (Linux/macOS) or an SSH client like PuTTY (Windows) on your local machine.</p>
+</li>
+<li>
+<p>Navigate to the directory where you saved your key pair&#8217;s <code>.pem</code> file (e.g., <code>ocp-jump-host-key.pem</code>).</p>
+</li>
+<li>
+<p>Set the correct permissions for your private key file to ensure only you can read it. This is a security best practice for SSH keys:
+<code><code>bash
+chmod 400 ocp-jump-host-key.pem
+</code></code></p>
+</li>
+<li>
+<p>Connect to your EC2 instance using the following SSH command. Replace <code>ocp-jump-host-key.pem</code> with the actual path to your key file and <code>YOUR_PUBLIC_IP</code> with the Public IPv4 address you noted in Step 3.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>For Amazon Linux 2023/2, the default username is <code>ec2-user</code>.
+<code><code>bash
+ssh -i ocp-jump-host-key.pem ec2-user@YOUR_PUBLIC_IP
+</code></code>
+<strong>Example:</strong>
+<code><code>bash
+ssh -i ~/.ssh/ocp-jump-host-key.pem ec2-user@3.8.123.456
+</code></code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>The first time you connect, you might be prompted to confirm the host&#8217;s authenticity. Type <code>yes</code> and press Enter.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You should now be successfully logged into your EC2 jump host, indicated by the change in your terminal prompt.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you encounter any issues connecting, review the following common troubleshooting points:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Key Permissions:</strong> Double-check that the <code>chmod 400</code> command was executed correctly on your <code>.pem</code> file.</p>
+</li>
+<li>
+<p><strong>Public IP Address:</strong> Confirm that the Public IPv4 address used in the SSH command is accurate and belongs to your <code>ocp-jump-host</code> instance.</p>
+</li>
+<li>
+<p><strong>Security Group Rules:</strong> Verify that your local machine&#8217;s current public IP address is correctly allowed in the <code>ocp-jump-host-sg</code> security group for SSH (TCP port 22).</p>
+</li>
+<li>
+<p><strong>Key Pair Mismatch:</strong> Ensure the <code>.pem</code> file specified with the <code>-i</code> flag matches the key pair associated with your EC2 instance.</p>
+</li>
+<li>
+<p><strong>Instance State:</strong> Confirm the instance state is <code>running</code> and <code>2/2 checks passed</code> in the EC2 dashboard.</p>
+</li>
+<li>
+<p><strong>Network Path:</strong> Check for any corporate firewalls or VPNs that might be blocking outbound SSH connections.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_5_perform_initial_system_updates_optional_but_recommended"><a class="anchor" href="#_step_5_perform_initial_system_updates_optional_but_recommended"></a>Step 5: Perform Initial System Updates (Optional, but Recommended)</h3>
+<div class="paragraph">
+<p>Once you are connected to your jump host, it&#8217;s good practice to update the installed packages to ensure you have the latest security patches and software versions.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">sudo dnf update -y  # For Amazon Linux 2023
+# If you chose Amazon Linux 2:
+# sudo yum update -y</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This ensures your jump host&#8217;s operating system is current and stable before proceeding with OpenShift-specific tooling.</p>
+</div>
+<div class="paragraph">
+<p>You have now successfully deployed and established a secure connection to your EC2 Jump Host. This foundational component will be utilized in subsequent lab activities to deploy and manage your OpenShift cluster.</p>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="../iam-permissions-for-openshift-installer/create-iam-role.html">Create IAM Role</a></span>
+  <span class="next"><a href="../setup-the-bastion-ec2/setup-the-bastion-ec2.html">Setup the Bastion EC2</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
