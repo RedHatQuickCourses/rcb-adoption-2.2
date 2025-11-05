@@ -1,6 +1,6 @@
 site:
-  title: FIXME Course Title
-  start_page: REPLACEREPONAME::index.adoc
+  title:  OCP on AWS Hands-On Lab
+  start_page: rcb-adoption-2.2::index.adoc
 
 content:
   sources:

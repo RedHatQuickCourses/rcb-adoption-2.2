@@ -1,0 +1,142 @@
+#  Deploy EC2 Jump Host
+
+A jump host, also known as a bastion host, is an EC2 instance deployed as a secure intermediary to access private resources within your AWS VPC. This host acts as a gateway, allowing administrators to securely connect to other instances, such as those forming an OpenShift cluster, that reside in private subnets. For OCP on AWS, the jump host facilitates access to core cluster components without exposing them directly to the public internet. Deployment involves:
+
+*   Launching a Linux-based EC2 instance in a public subnet.
+*   Configuring its security group to allow SSH access from trusted IP addresses.
+*   Installing necessary tools like the OpenShift CLI (`oc`) and AWS CLI.
+
+It is a critical component for securely managing and interacting with your OCP environment.#  Deploy EC2 Jump Host
+
+= Deploy EC2 Jump Host
+
+In the intricate process of deploying OpenShift Container Platform (OCP) on AWS, a *Jump Host* (often referred to as a Bastion Host) plays an indispensable role. It acts as a secure, intermediary server, providing a single, controlled access point into your private network resources, including the forthcoming OCP cluster. This centralized point is critical for both security and operational efficiency.
+
+[NOTE]
+====
+While "Bastion EC2" is another common term, "Jump Host" more precisely describes its function in this context – facilitating a secure "jump" from an external, less trusted network into a more secure, internal network to manage resources that are otherwise isolated.
+====
+
+== What is a Jump Host and Why Do We Need One?
+
+A jump host is a dedicated server strategically placed at the edge of your private network, typically residing in a public subnet. It is meticulously configured with very strict security rules to fulfill several vital functions:
+
+*   *Secure and Controlled Access:* Its primary purpose is to establish a hardened and monitored entry point to private network resources (such as your OCP cluster nodes) that are intentionally designed *without* direct internet access. Instead of exposing multiple sensitive components to the public internet, you expose only the jump host, which then brokers secure connections.
+*   *Centralized Management Hub:* The jump host serves as the designated location to execute OpenShift installer commands, store critical configuration files, and interact with the cluster using command-line tools like the `oc` CLI. This centralizes management operations and standardizes the deployment environment.
+*   *Tooling Repository:* It provides a platform to install and configure all necessary command-line tools (e.g., `aws-cli`, `openshift-install`, `oc` CLI, `jq`, `yq`, `git`) that are essential for the OCP deployment and subsequent ongoing management.
+*   *Debugging and Troubleshooting Gateway:* During the initial deployment and for ongoing maintenance, the jump host offers a secure vantage point from which to SSH into individual OCP cluster nodes for diagnostics and troubleshooting, without exposing those nodes directly to the wider internet.
+
+For our OCP deployment on AWS, the jump host will be an EC2 instance carefully provisioned and configured to meet these operational and security requirements.
+
+== Hands-on Activity: Deploy an EC2 Jump Host
+
+In this activity, you will launch an EC2 instance that will serve as our dedicated jump host for the OpenShift deployment.
+
+[IMPORTANT]
+====
+Before proceeding, ensure you have successfully completed the "Provision AWS Blank Environment" and "Deploy VPC Resources" prerequisites. You will need your created VPC ID and the ID of your designated Public Subnet.
+====
+
+=== Step 1: Navigate to the EC2 Dashboard
+
+1.  Log in to the AWS Management Console.
+2.  Use the search bar at the top or navigate through "Services" -> "Compute" to find and click on *EC2*.
+3.  Verify that you are operating in the correct AWS Region where you provisioned your VPC.
+
+=== Step 2: Launch an EC2 Instance
+
+1.  From the EC2 dashboard, click the *Launch instances* button.
+2.  *Name and tags*:
+    *   In the "Name" field, enter `ocp-jump-host`.
+    *   You are encouraged to add additional descriptive tags as per your organization's tagging strategy.
+3.  *Application and OS Images (Amazon Machine Image - AMI)*:
+    *   Search for and select *Amazon Linux 2023 AMI* (or Amazon Linux 2 AMI if 2023 is not preferred/available). This choice provides a stable, secure, and well-supported Linux base with essential tools.
+    *   Architecture: Retain the default `64-bit (x86)`.
+4.  *Instance type*:
+    *   Select `t3.medium` or `t3.large`. A `t3.medium` is generally sufficient for the OpenShift installer, but a `t3.large` offers additional CPU and memory headroom for more demanding tasks or future expansions.
+    *   If `t3` instances are not available or if you are specifically trying to adhere to AWS Free Tier limits, a `t2.medium` could be used but may result in slower operations.
+5.  *Key pair (login)*:
+    *   An SSH key pair is essential for securely connecting to your instance.
+    *   If you have an existing key pair whose `.pem` file you possess and can access, select it from the dropdown.
+    *   If not, select *Create a new key pair*.
+        *   Provide a "Key pair name", for example, `ocp-jump-host-key`.
+        *   Choose "RSA" for "Key pair type".
+        *   Select ".pem" for "Private key file format".
+        *   Click *Create key pair*. Your browser will download the `.pem` file. *It is crucial to store this file securely and remember its location, as it is your sole credential for accessing the jump host.*
+6.  *Network settings*:
+    *   Click *Edit* next to "Network settings".
+    *   *VPC*: From the dropdown, select the VPC you created during the "Deploy VPC Resources" prerequisite (e.g., `ocp-vpc`).
+    *   *Subnet*: Choose the *public subnet* within your VPC (e.g., `ocp-public-subnet-az1`). This is where the jump host will reside.
+    *   *Auto-assign Public IP*: Ensure this setting is *Enable*. This will assign a public IPv4 address to your jump host, allowing you to connect to it from the internet.
+    *   *Firewall (security groups)*:
+        *   Select *Create security group*.
+        *   *Security group name*: Enter `ocp-jump-host-sg`.
+        *   *Description*: Provide a clear description, e.g., `Security group for OCP Jump Host allowing SSH access`.
+        *   *Inbound security group rules*:
+            *   Add a new rule:
+                *   *Type*: Select `SSH`. This automatically sets the protocol to TCP and port range to 22.
+                *   *Source type*: Select `My IP`. AWS will auto-detect your current public IP address and configure the rule to allow SSH traffic *only* from your current location. This is the *most secure* option for a jump host.
+                *   [WARNING]
+                    For production environments, *never* use `0.0.0.0/0` (Anywhere) for SSH access unless absolutely necessary and coupled with other stringent security controls. If your IP changes frequently or you need access from multiple specific locations, you can use `Custom` and specify a CIDR block that encompasses your allowed IP ranges. For this lab, `My IP` is ideal.
+7.  *Configure storage (volumes)*:
+    *   The default storage configuration (e.g., 8 GiB gp2/gp3) is generally adequate for the operating system and initial tooling. If you anticipate storing large installer assets, extensive logs, or additional software, you might consider increasing this to 20-50 GiB.
+8.  *Advanced details*:
+    *   For the purpose of this deployment, you can leave these settings at their default values.
+9.  *Summary*: Carefully review all the configuration settings on the summary panel.
+10. Click *Launch instance*.
+
+=== Step 3: Verify the EC2 Instance State
+
+1.  After clicking "Launch instance", you will see a confirmation page. Click *View all instances*.
+2.  Locate your `ocp-jump-host` instance in the list.
+3.  Monitor the "Instance state" column. It will initially show `pending` and then transition to `running`. Wait for the "Status checks" column to display `2/2 checks passed`. This process may take a few minutes.
+4.  Once the instance is running and checks have passed, make a note of its *Public IPv4 address*. You will use this address to connect via SSH.
+
+=== Step 4: Connect to Your Jump Host
+
+With your jump host successfully launched and running, the next step is to establish a secure SSH connection to it.
+
+1.  Open a terminal (Linux/macOS) or an SSH client like PuTTY (Windows) on your local machine.
+2.  Navigate to the directory where you saved your key pair's `.pem` file (e.g., `ocp-jump-host-key.pem`).
+3.  Set the correct permissions for your private key file to ensure only you can read it. This is a security best practice for SSH keys:
+    ```bash
+    chmod 400 ocp-jump-host-key.pem
+    ```
+4.  Connect to your EC2 instance using the following SSH command. Replace `ocp-jump-host-key.pem` with the actual path to your key file and `YOUR_PUBLIC_IP` with the Public IPv4 address you noted in Step 3.
+    *   For Amazon Linux 2023/2, the default username is `ec2-user`.
+    ```bash
+    ssh -i ocp-jump-host-key.pem ec2-user@YOUR_PUBLIC_IP
+    ```
+    *Example:*
+    ```bash
+    ssh -i ~/.ssh/ocp-jump-host-key.pem ec2-user@3.8.123.456
+    ```
+5.  The first time you connect, you might be prompted to confirm the host's authenticity. Type `yes` and press Enter.
+
+You should now be successfully logged into your EC2 jump host, indicated by the change in your terminal prompt.
+
+[NOTE]
+====
+If you encounter any issues connecting, review the following common troubleshooting points:
+
+*   **Key Permissions:** Double-check that the `chmod 400` command was executed correctly on your `.pem` file.
+*   **Public IP Address:** Confirm that the Public IPv4 address used in the SSH command is accurate and belongs to your `ocp-jump-host` instance.
+*   **Security Group Rules:** Verify that your local machine's current public IP address is correctly allowed in the `ocp-jump-host-sg` security group for SSH (TCP port 22).
+*   **Key Pair Mismatch:** Ensure the `.pem` file specified with the `-i` flag matches the key pair associated with your EC2 instance.
+*   **Instance State:** Confirm the instance state is `running` and `2/2 checks passed` in the EC2 dashboard.
+*   **Network Path:** Check for any corporate firewalls or VPNs that might be blocking outbound SSH connections.
+====
+
+=== Step 5: Perform Initial System Updates (Optional, but Recommended)
+
+Once you are connected to your jump host, it's good practice to update the installed packages to ensure you have the latest security patches and software versions.
+
+```bash
+sudo dnf update -y  # For Amazon Linux 2023
+# If you chose Amazon Linux 2:
+# sudo yum update -y
+```
+
+This ensures your jump host's operating system is current and stable before proceeding with OpenShift-specific tooling.
+
+You have now successfully deployed and established a secure connection to your EC2 Jump Host. This foundational component will be utilized in subsequent lab activities to deploy and manage your OpenShift cluster.

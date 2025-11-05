@@ -1,0 +1,196 @@
+#  Setup the Bastion EC2
+
+== Setup the Bastion EC2
+
+Configure the deployed EC2 Jump Host to function as a secure Bastion. This critical step involves installing all necessary tools required for OpenShift deployment and management on AWS. Key installations include the `openshift-install` binary, `oc` CLI, and `aws` CLI. Additionally, you will set up utilities like `jq` and `yq` for configuration file manipulation. The setup also ensures SSH access for secure interaction with cluster components and verifies proper network connectivity and security configurations.#  Setup the Bastion EC2
+
+=== Setup the Bastion EC2
+
+The *Bastion EC2*, often referred to as a *Jump Host*, plays a critical role in deploying and managing your OpenShift Container Platform (OCP) cluster on AWS. It acts as a secure, intermediary server from which you initiate the OCP installation process and perform subsequent administrative tasks.
+
+==== What is a Bastion Host and Why is it Essential?
+
+A bastion host is a special purpose server hardened against attacks and designed to be the only point of entry into an internal or private network from an external network (like the internet). In the context of OCP on AWS:
+
+*   *Security:* It minimizes the attack surface by centralizing access to your private VPC network where OCP nodes will reside. Instead of exposing all OCP nodes directly to the internet, you only expose the bastion host.
+*   *Control:* All administrative access to the OCP cluster components (e.g., SSH into worker nodes, accessing the installer) funnels through this single, controlled point.
+*   *Tooling Hub:* It serves as the workstation where you will run the `openshift-install` program, `oc` CLI tool, `awscli`, and other utilities necessary for the deployment and day-2 operations of your OCP cluster.
+
+==== Required Tools and Their Purpose
+
+Before we begin the OCP deployment, we need to equip our Bastion EC2 with a suite of essential tools:
+
+*   *AWS Command Line Interface (`awscli`):* Used to interact with AWS services, verify resources, and potentially configure cloud resources programmatically.
+*   *OpenShift Installer (`openshift-install`):* The primary tool provided by Red Hat to provision the necessary AWS infrastructure and deploy the OCP cluster.
+*   *OpenShift Command Line Interface (`oc`):* Used to interact with the deployed OCP cluster, manage applications, projects, and users.
+*   *`jq` (JSON processor):* A lightweight and flexible command-line JSON processor, often used to parse output from `awscli` or OpenShift API calls.
+*   *`yq` (YAML processor):* Similar to `jq`, but for YAML data. Useful for manipulating OpenShift configuration files.
+*   *`htpasswd` (Apache HTTP Server utility):* Used to generate bcrypt hashes for creating OpenShift `htpasswd` identity providers, enabling basic user authentication.
+*   *`ssh-keygen` (SSH key generator):* Essential for creating SSH key pairs that the OpenShift installer will use to connect to and configure the OCP cluster nodes.
+*   *`git` (Version Control System):* Useful for cloning repositories, managing configurations, and other development tasks.
+
+Armed with this understanding, let's proceed to set up our Bastion EC2.
+
+==== Hands-on Lab: Setting Up the Bastion EC2
+
+In this lab, you will connect to your previously deployed EC2 Jump Host (which serves as our Bastion EC2) and install all the necessary tools for the OpenShift installation.
+
+===== Step 1: Connect to the EC2 Jump Host
+
+You should have already deployed an EC2 Jump Host as per the "Deploy EC2 Jump Host" objective. You will need its Public IP address and the SSH private key (`.pem` file) associated with it.
+
+. Open your terminal or SSH client.
+. Navigate to the directory where your SSH private key (`your-key.pem`) is stored.
+. Set appropriate permissions for your private key (if you haven't already):
++
+[source,bash]
+----
+chmod 400 your-key.pem
+----
+
+. Connect to the EC2 Jump Host using SSH. Replace `ec2-user` with the appropriate username for your AMI (e.g., `centos`, `admin`, `ubuntu`) and `YOUR_JUMP_HOST_PUBLIC_IP` with the actual public IP address of your Jump Host.
++
+[source,bash]
+----
+ssh -i your-key.pem ec2-user@YOUR_JUMP_HOST_PUBLIC_IP
+----
++
+You should now be logged into your Bastion EC2 instance.
+
+===== Step 2: Update Operating System Packages and Install Essential Utilities
+
+It's a good practice to update your system's packages to the latest versions and install common utilities. We'll assume an Amazon Linux 2 or RHEL/CentOS-like system for these commands.
+
+. Update the package list and upgrade existing packages:
++
+[source,bash]
+----
+sudo yum update -y
+----
+
+. Install `jq`, `git`, `wget`, `vim`, `unzip`, and `httpd-tools` (which provides `htpasswd`):
++
+[source,bash]
+----
+sudo yum install -y jq git wget vim unzip httpd-tools
+----
+
+. Install `yq`. For Amazon Linux 2 or similar, `yq` is often best installed by downloading its binary:
++
+[source,bash]
+----
+# Download the yq binary
+wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq
+
+# Make it executable
+chmod +x /usr/local/bin/yq
+
+# Verify yq installation
+yq --version
+----
+
+===== Step 3: Install AWS Command Line Interface (CLI)
+
+The `awscli` is often pre-installed on Amazon Linux AMIs, but it's good to ensure it's present and potentially updated. We'll use the `pip` method for a robust installation/update.
+
+. Install `python3-pip` and then `awscli`:
++
+[source,bash]
+----
+sudo yum install -y python3-pip
+sudo pip3 install --upgrade awscli
+----
+
+. Verify the `awscli` installation:
++
+[source,bash]
+----
+aws --version
+----
++
+[NOTE]
+Ensure that the EC2 instance profile attached to your Bastion EC2 has the necessary IAM permissions to interact with AWS services required for OCP deployment (e.g., EC2, VPC, S3, IAM). This was covered in the "IAM Permissions for Openshift Installer" objective.
+
+===== Step 4: Install OpenShift Installer and OpenShift CLI (oc)
+
+You will download the OpenShift installer and `oc` client from the official OpenShift Container Platform downloads page. You'll need an active Red Hat subscription to access these.
+
+. Navigate to a directory where you want to store the binaries. We'll create a `~/bin` directory for personal binaries and add it to your PATH.
++
+[source,bash]
+----
+mkdir -p ~/bin
+cd ~/bin
+----
+
+. Download the `openshift-install` and `oc` client binaries. *Replace `4.x.y` with your desired OpenShift version, typically the latest stable release.* You can find the exact download links on the Red Hat OpenShift Cluster Manager portal under your account (e.g., `https://console.redhat.com/openshift/downloads`).
++
+[source,bash]
+----
+# Example: For OpenShift 4.14.x (always check official sources for latest stable links)
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.14/openshift-install-linux.tar.gz
+wget https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.14/openshift-client-linux.tar.gz
+----
++
+[NOTE]
+The exact `wget` URLs will depend on the specific OpenShift version you intend to deploy. Always refer to the official Red Hat documentation or the OpenShift Cluster Manager for the latest stable release links.
+
+. Extract the downloaded archives and make the binaries executable:
++
+[source,bash]
+----
+tar -xvf openshift-install-linux.tar.gz
+tar -xvf openshift-client-linux.tar.gz
+
+chmod +x openshift-install oc kubectl
+----
++
+[NOTE]
+The `openshift-client-linux.tar.gz` usually contains both `oc` and `kubectl` binaries.
+
+. Add your `~/bin` directory to your shell's PATH environment variable for easy access:
++
+[source,bash]
+----
+echo 'export PATH=$PATH:~/bin' >> ~/.bashrc
+source ~/.bashrc
+----
+
+. Verify the installation of OpenShift tools:
++
+[source,bash]
+----
+openshift-install version
+oc version --client
+----
+
+===== Step 5: Generate SSH Key Pair for OpenShift Installation
+
+The OpenShift installer uses SSH to connect to the bootstrap, control plane (master), and worker nodes during the installation process. You need to generate an SSH key pair on your Bastion host for this purpose. The public key will be provided to the installer, which embeds it into the created EC2 instances.
+
+. Generate a new SSH key pair. You can accept the default file location (`~/.ssh/id_rsa`) and leave the passphrase empty for lab environments, or provide one for increased security.
++
+[source,bash]
+----
+ssh-keygen -t rsa -b 4096 -N '' -f ~/.ssh/id_rsa
+----
++
+This command generates two files:
+*   `~/.ssh/id_rsa` (private key)
+*   `~/.ssh/id_rsa.pub` (public key)
+
+. Set appropriate permissions for the private key:
++
+[source,bash]
+----
+chmod 600 ~/.ssh/id_rsa
+----
+
+. Display the public key. You will need this content for the OpenShift installation configuration later.
++
+[source,bash]
+----
+cat ~/.ssh/id_rsa.pub
+----
+
+Your Bastion EC2 is now fully configured with all the necessary tools and credentials to proceed with the OpenShift Container Platform deployment.

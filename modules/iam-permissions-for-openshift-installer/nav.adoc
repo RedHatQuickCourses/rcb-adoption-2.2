@@ -1,0 +1,4 @@
+* xref:iam-permissions-for-openshift-installer.adoc[]
+** xref:what-permissions-are-required.adoc[]
+** xref:create-iam-policies.adoc[]
+** xref:create-iam-role.adoc[]

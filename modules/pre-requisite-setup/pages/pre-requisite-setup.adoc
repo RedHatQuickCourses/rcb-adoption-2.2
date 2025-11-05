@@ -1,0 +1,8 @@
+#  Pre-requisite setup
+
+The `Pre-requisite setup` phase is crucial for preparing the foundational AWS infrastructure required for OpenShift deployment. This involves creating a suitable environment before initiating the cluster installation. Key steps include:
+
+*   Provisioning an AWS Blank Environment, ensuring a clean and isolated space for the OCP cluster.
+*   Deploying essential VPC (Virtual Private Cloud) Resources such as subnets, route tables, and internet gateways to establish the network backbone.
+
+This preparation ensures that subsequent OpenShift installation processes have the necessary underlying AWS resources and network connectivity in place.

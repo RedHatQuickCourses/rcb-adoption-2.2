@@ -1,0 +1,76 @@
+#  What Permissions are Required?
+
+The successful deployment of OpenShift Container Platform (OCP) on Amazon Web Services (AWS) hinges on correctly configured AWS Identity and Access Management (IAM) permissions. The OpenShift installer, as well as the cluster's internal components, require specific permissions to provision, manage, and operate AWS resources on your behalf.
+
+[[why-iam-permissions]]
+== Why IAM Permissions are Critical
+
+When you deploy OpenShift on AWS, the `openshift-install` program acts as a control plane for your infrastructure. It needs programmatic access to your AWS account to:
+
+*   Create core networking components like Virtual Private Clouds (VPCs), subnets, route tables, and Internet Gateways.
+*   Launch Amazon EC2 instances for control plane (master) and worker nodes.
+*   Configure Elastic Load Balancers (ELBs) for API and application ingress.
+*   Provision Amazon Elastic Block Store (EBS) volumes for persistent storage.
+*   Manage Amazon S3 buckets for the internal image registry and bootstrap assets.
+*   Configure Amazon Route 53 records for internal and external DNS resolution.
+*   Create and manage other AWS services as required by the cluster operators.
+
+After the initial installation, the OpenShift cluster's internal components (Kubernetes control plane, cluster operators, and applications) continue to interact with AWS services. For example, the cloud controller manager might provision new load balancers for `Service` objects of type `LoadBalancer`, or provision EBS volumes for `PersistentVolumeClaims`.
+
+[[iam-entities-requiring-permissions]]
+== IAM Entities Requiring Permissions
+
+Two primary IAM entities require permissions for an OpenShift on AWS deployment:
+
+. *The IAM entity executing `openshift-install`*: This is typically an an AWS IAM User or an IAM Role that you assume when running the `openshift-install` command from your local machine or a jump host. This entity needs extensive permissions to create the initial AWS infrastructure.
+. *The EC2 Instance Profiles for OpenShift Nodes*: These are IAM Roles attached to the EC2 instances that form your OpenShift cluster (control plane nodes and worker nodes). These roles grant permissions to the instances themselves, allowing OpenShift components running on them to interact with AWS services *after* the cluster is deployed. For example, worker nodes might need permissions to pull images from ECR (if used), or control plane nodes might need permissions to manage EBS volumes or ELBs.
+
+[[required-aws-services]]
+== Required AWS Service Permissions
+
+The OpenShift installer and the deployed cluster interact with a broad set of AWS services. Below is a breakdown of the key services for which permissions are required:
+
+*   *Amazon EC2*:
+    ** Instances: `ec2:RunInstances`, `ec2:StopInstances`, `ec2:TerminateInstances`, `ec2:Describe*`
+    ** Volumes: `ec2:CreateVolume`, `ec2:AttachVolume`, `ec2:DetachVolume`, `ec2:DeleteVolume`, `ec2:ModifyVolume`
+    ** Security Groups: `ec2:CreateSecurityGroup`, `ec2:DeleteSecurityGroup`, `ec2:AuthorizeSecurityGroupIngress`, `ec2:RevokeSecurityGroupIngress`, `ec2:AuthorizeSecurityGroupEgress`, `ec2:RevokeSecurityGroupEgress`
+    ** Key Pairs: `ec2:CreateKeyPair`, `ec2:DeleteKeyPair`
+    ** Instance Types: `ec2:DescribeInstanceTypes`
+    ** Spot Instances: `ec2:RequestSpotInstances`, `ec2:CancelSpotInstanceRequests`
+*   *Amazon VPC*:
+    ** VPCs: `ec2:CreateVpc`, `ec2:DeleteVpc`, `ec2:ModifyVpcAttribute`
+    ** Subnets: `ec2:CreateSubnet`, `ec2:DeleteSubnet`, `ec2:ModifySubnetAttribute`
+    ** Internet Gateways: `ec2:CreateInternetGateway`, `ec2:DeleteInternetGateway`, `ec2:AttachInternetGateway`, `ec2:DetachInternetGateway`
+    ** Route Tables: `ec2:CreateRouteTable`, `ec2:DeleteRouteTable`, `ec2:CreateRoute`, `ec2:ReplaceRoute`, `ec2:DeleteRoute`, `ec2:AssociateRouteTable`, `ec2:DisassociateRouteTable`
+    ** Network Interfaces: `ec2:CreateNetworkInterface`, `ec2:DeleteNetworkInterface`, `ec2:AttachNetworkInterface`, `ec2:DetachNetworkInterface`
+    ** Egress-only Internet Gateways (EIGW): `ec2:CreateEgressOnlyInternetGateway`, `ec2:DeleteEgressOnlyInternetGateway` (for IPv6 deployments)
+*   *Elastic Load Balancing (ELB)*:
+    ** Classic Load Balancers (CLB): `elasticloadbalancing:CreateLoadBalancer`, `elasticloadbalancing:DeleteLoadBalancer`, `elasticloadbalancing:RegisterInstancesWithLoadBalancer`, `elasticloadbalancing:DeregisterInstancesFromLoadBalancer`
+    ** Application Load Balancers (ALB) / Network Load Balancers (NLB): `elasticloadbalancing:CreateLoadBalancer`, `elasticloadbalancing:DeleteLoadBalancer`, `elasticloadbalancing:CreateTargetGroup`, `elasticloadbalancing:DeleteTargetGroup`, `elasticloadbalancing:RegisterTargets`, `elasticloadbalancing:DeregisterTargets`, `elasticloadbalancing:CreateListener`, `elasticloadbalancing:DeleteListener`
+*   *Amazon S3*:
+    ** Buckets: `s3:CreateBucket`, `s3:DeleteBucket`, `s3:PutBucketVersioning`, `s3:PutBucketOwnershipControls`, `s3:PutObjectAcl`, `s3:PutEncryptionConfiguration`
+    ** Objects: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject`, `s3:ListBucket`
+*   *Amazon Route 53*:
+    ** Hosted Zones: `route53:CreateHostedZone`, `route53:DeleteHostedZone`
+    ** Record Sets: `route53:ChangeResourceRecordSets`
+*   *AWS Identity and Access Management (IAM)*:
+    ** Roles: `iam:CreateRole`, `iam:DeleteRole`, `iam:PassRole`
+    ** Policies: `iam:CreatePolicy`, `iam:DeletePolicy`, `iam:AttachRolePolicy`, `iam:DetachRolePolicy`
+    ** Instance Profiles: `iam:CreateInstanceProfile`, `iam:DeleteInstanceProfile`, `iam:AddRoleToInstanceProfile`, `iam:RemoveRoleFromInstanceProfile`
+*   *AWS Key Management Service (KMS)*:
+    ** Keys: `kms:CreateKey`, `kms:ScheduleKeyDeletion`, `kms:DescribeKey`, `kms:Encrypt`, `kms:Decrypt`, `kms:GenerateDataKey` (if using encrypted EBS volumes or S3 buckets)
+*   *AWS Security Token Service (STS)*:
+    ** `sts:AssumeRole`: To allow entities to assume specific IAM roles.
+*   *AWS CloudFormation*:
+    ** Stacks: `cloudformation:CreateStack`, `cloudformation:DeleteStack`, `cloudformation:DescribeStacks` (though OpenShift primarily uses direct API calls, some components might use CFN).
+*   *Tagging*:
+    ** Resources: `ec2:CreateTags`, `ec2:DeleteTags`, `s3:PutBucketTagging`, `elasticloadbalancing:AddTags`, `route53:AssociateVPCWithHostedZone` (essential for resource management and cost allocation).
+
+In addition to these, various `Describe*` permissions are needed across almost all services for the installer and cluster components to inspect the state of existing resources.
+
+[[principle-of-least-privilege]]
+== Adhering to the Principle of Least Privilege
+
+While the OpenShift installer needs a broad set of permissions initially, Red Hat provides specific, finely-tuned IAM policies that adhere to the principle of least privilege. These policies ensure that entities only have the permissions necessary to perform their required functions, minimizing the security risk.
+
+In the subsequent sections, you will learn how to create these precise IAM policies and roles for your OpenShift on AWS deployment.

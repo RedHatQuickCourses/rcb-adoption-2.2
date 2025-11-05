@@ -1,0 +1,78 @@
+#  Provision AWS Blank Environment
+
+= Provision AWS Blank Environment
+
+Before we embark on the exciting journey of deploying OpenShift Container Platform (OCP) on Amazon Web Services (AWS), the first crucial step is to establish a pristine, "blank" environment. Think of this as preparing a fresh canvas for your masterpiece. This foundational step ensures that our subsequent deployments, starting with the core networking infrastructure, have a clean slate, preventing potential conflicts and simplifying the entire process.
+
+[NOTE]
+This initial setup focuses on preparing your AWS account for the deployment. We won't be creating specific AWS resources in this step, but rather ensuring you have the necessary access and environmental context established.
+
+== What is a "Blank Environment" in AWS?
+
+In the context of this lab, provisioning a "blank AWS environment" means:
+
+*   **Having an active AWS account:** This is your portal to AWS services.
+*   **Administrator-level access:** Ensuring you have the necessary permissions to create, modify, and delete resources required for OCP.
+*   **Selecting a target AWS Region:** Choosing where your OCP cluster and its underlying infrastructure will reside. This is a critical decision impacting latency, cost, and service availability.
+*   **Ensuring a clean slate (optional but recommended):** For an enterprise environment, this might mean starting in a dedicated sandbox account or a specific organizational unit. For a personal lab, it often means ensuring no lingering resources from previous experiments might interfere.
+
+This preparatory phase sets the stage for a smooth deployment by minimizing variables and potential hurdles.
+
+== Prerequisites
+
+To successfully complete this step, you will need:
+
+*   An active AWS account with administrative privileges. This typically means an IAM user with `AdministratorAccess` policy attached, or root account access (though an IAM user is preferred for daily operations).
+*   A web browser to access the AWS Management Console.
+
+== Key Considerations: AWS Region Selection
+
+Choosing an AWS Region is more than just picking a location on a map; it's a strategic decision.
+
+*   **Latency:** Proximity to your users or other services can significantly impact performance.
+*   **Service Availability:** While OCP on AWS is highly resilient, not all AWS services are available in every region. For our purposes, common regions like `us-east-1` (N. Virginia), `us-west-2` (Oregon), `eu-west-1` (Ireland), or `ap-southeast-2` (Sydney) are generally good choices due to their comprehensive service offerings.
+*   **Cost:** Costs for resources can vary slightly between regions.
+*   **Compliance:** Certain data residency requirements might dictate specific region choices.
+
+For this lab, we recommend choosing a region that is geographically close to you or one known for good service availability. *Once chosen, stick to this region for all subsequent resource deployments within this lab unless explicitly instructed otherwise.*
+
+== Hands-on Activity: Preparing Your AWS Environment
+
+This activity will guide you through logging into the AWS Management Console and confirming your target region.
+
+=== Step 1: Log in to the AWS Management Console
+
+1.  Open your preferred web browser.
+2.  Navigate to the AWS Management Console login page: `https://aws.amazon.com/console/`.
+3.  Enter your AWS account credentials (email for root user, or account ID/alias and IAM user credentials for an IAM user).
+4.  Click `Sign in`.
+
+    You should now be presented with the AWS Management Console dashboard.
+
+=== Step 2: Select Your Target AWS Region
+
+The AWS Management Console displays your current region in the top right corner of the navigation bar.
+
+1.  Locate the region dropdown menu in the upper-right corner of the console, usually showing the name of the currently selected region (e.g., "N. Virginia").
+2.  Click on the dropdown.
+3.  From the list, select your desired region for this lab (e.g., `US East (N. Virginia) us-east-1`).
+
+    image::assets/aws-region-selection.png[AWS Region Selection, width=600, align=center]
+    _Figure: Selecting your target AWS Region in the Management Console._
+
+    [TIP]
+    Make a note of the region you've selected (e.g., `us-east-1`). You will need to use this consistently throughout the lab.
+
+=== Step 3: (Optional) Verify Account State
+
+While not strictly creating resources, it's good practice to quickly check for any existing resources that might interfere, especially if you're using an account that has been used for previous labs.
+
+1.  In the AWS Management Console search bar, type `VPC` and navigate to the `VPC` dashboard.
+2.  On the left navigation pane, click `Your VPCs`.
+3.  If you see any VPCs that are not the "default" VPC (which AWS creates by default in each region), consider if they are required or can be deleted. For a truly blank slate, you'd only want the default VPCs present at this stage. We will be creating a *new* custom VPC in the next section.
+4.  Similarly, you can quickly check `EC2` instances or `S3` buckets if you suspect previous deployments.
+
+    [WARNING]
+    Do not delete any resources unless you are absolutely certain they are not needed. Deleting essential resources can disrupt other services or projects within your AWS account. For the purpose of this lab, we will be creating new, isolated resources.
+
+With these initial steps complete, your AWS environment is now provisioned and ready for the next phase: deploying the foundational networking resources for your OCP cluster.

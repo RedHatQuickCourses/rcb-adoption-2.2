@@ -1,0 +1,9 @@
+#  IAM Permissions for Openshift Installer
+
+[.lead]
+Setting up Identity and Access Management (IAM) permissions is a crucial prerequisite for deploying OpenShift on AWS. The OpenShift installer requires a defined set of AWS permissions to provision and manage resources like EC2 instances, VPC components, and S3 buckets during the installation process. These permissions ensure the installer can successfully interact with various AWS services on your behalf. The process involves:
+
+*   Defining and creating specific IAM policies that outline the necessary actions and resources.
+*   Attaching these policies to an IAM role.
+
+This dedicated IAM role provides the OpenShift installer with the granular access required to deploy and configure your OpenShift cluster securely within your AWS environment.

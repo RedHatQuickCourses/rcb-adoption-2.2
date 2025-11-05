@@ -1,0 +1,82 @@
+#  Create IAM Role
+
+This section guides you through the creation of an AWS Identity and Access Management (IAM) role specifically designed for the OpenShift installer. This role will encapsulate all the necessary permissions for the `openshift-install` command-line tool to provision the required AWS infrastructure for your OpenShift cluster.
+
+[[_create_iam_role]]
+== Create IAM Role
+
+The OpenShift installer needs to interact with various AWS services to set up the cluster's infrastructure, including EC2 instances, VPC, S3 buckets, Route 53, and more. Rather than attaching these extensive permissions directly to an IAM user (which can be a security risk), the recommended practice is to create an IAM role. This role consolidates all the necessary permissions, which can then be assumed by an authorized IAM user or service. This approach enhances security by allowing the permissions to be granted temporarily and centrally managed.
+
+In this step, you will create an IAM role that the OpenShift installer will assume to provision your cluster resources.
+
+=== Technical Explanation
+
+An IAM role is an IAM identity that you can create in your account that has specific permissions. IAM roles are similar to IAM users in that they are AWS identities with permission policies that determine what the identity can and cannot do in AWS. However, instead of being uniquely associated with one person, a role is intended to be assumable by anyone who needs it. When an entity assumes a role, it temporarily receives security credentials that can be used to make API calls to AWS.
+
+For the OpenShift installer, we'll create a role that:
+
+*   **Has a Trust Policy:** This policy specifies *who* is allowed to assume the role. For our lab, this will typically be an IAM user within your AWS account.
+*   **Has Permissions Policies Attached:** These are the policies you created in the previous step, defining *what* actions the role can perform across AWS services (e.g., creating EC2 instances, S3 buckets, modifying Route 53 records).
+
+By creating this role, we centralize the permissions required for the installation process, making it easier to manage and audit.
+
+=== Hands-on Activity: Create the Openshift Installer Role
+
+Follow these steps to create the IAM role for the OpenShift installer.
+
+. Navigate to the AWS IAM Console
+**AWS Management Console** -> Search for `IAM` -> Select *IAM*
+
+. In the navigation pane, choose *Roles*, then select *Create role*.
+
+. **Select trusted entity**
+*   For *Trusted entity type*, select `AWS account`.
+*   For *An AWS account*, choose `This account`.
+*   *(Optional but recommended for production)* If you plan to assume this role from an EC2 instance that uses an Instance Profile, you might choose `AWS service` and then `EC2` as the use case. However, for a user-driven installation, `AWS account` is more flexible as it allows an IAM user to assume it.
+*   Leave the `Require external ID` and `Require MFA` options unchecked for simplicity in this lab environment. In a production environment, you might consider enabling these for enhanced security.
+*   Click *Next*.
+
+. **Add permissions**
+*   In the *Add permissions* section, search for and select the custom IAM policies you created in the previous section. For example:
+    *   `openshift-installer-policy` (or similar name you chose for general installer permissions)
+    *   `openshift-installer-s3-policy` (or similar name you chose for S3 bucket permissions)
++
+[NOTE]
+If you used different names for your policies, ensure you select the correct ones. These policies grant the necessary permissions for the OpenShift installer.
+
+*   Click *Next*.
+
+. **Name, review, and create**
+*   For *Role name*, enter `OpenshiftInstallerRole`.
+*   For *Description*, enter a meaningful description, such as: `IAM role for OpenShift installer to provision AWS infrastructure.`
+*   Review the policies attached and the trust policy.
+*   Click *Create role*.
+
+. **Verify the Role**
+*   Once the role is created, search for `OpenshiftInstallerRole` in the IAM Roles list and click on it.
+*   Verify that the `Permissions` tab displays the custom policies you attached.
+*   Go to the `Trust relationships` tab. It should show a policy similar to the following (allowing principals in your AWS account to assume the role):
++
+[source,json]
+----
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::YOUR_AWS_ACCOUNT_ID:root" <1>
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+----
+<1> Replace `YOUR_AWS_ACCOUNT_ID` with your actual 12-digit AWS account ID. This policy allows any IAM user or role within your AWS account with `sts:AssumeRole` permissions to assume this role. For stricter security, you would specify the ARN of a specific IAM user or another role here.
+
+*   **Record the Role ARN:** Make a note of the `Role ARN` displayed on the role summary page. You will need this ARN later when configuring the OpenShift installer environment on your Jump Host to assume this role.
++
+[TIP]
+The Role ARN will look something like `arn:aws:iam::123456789012:role/OpenshiftInstallerRole`. Keep this handy!
+
+You have now successfully created the IAM role for the OpenShift installer, consolidating all the necessary permissions into a single, manageable entity. In subsequent steps, you will deploy a Jump Host and configure it to use this role for the OpenShift installation.

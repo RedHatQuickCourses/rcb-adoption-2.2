@@ -1,10 +1,16 @@
-name: REPLACEREPONAME
-title: FIXME Course Title
-version: 1
+name: rcb-adoption-2.2
+title:  OCP on AWS Hands-On Lab
+version: 1.0.0
 nav:
 - modules/ROOT/nav.adoc
 - modules/LABENV/nav.adoc
-- modules/chapter1/nav.adoc
-- modules/chapter2/nav.adoc
-- modules/chapter3/nav.adoc
+
+- modules/pre-requisite-setup/nav.adoc
+
+- modules/iam-permissions-for-openshift-installer/nav.adoc
+
+- modules/deploy-ec2-jump-host/nav.adoc
+
+- modules/setup-the-bastion-ec2/nav.adoc
+
 - modules/appendix/nav.adoc

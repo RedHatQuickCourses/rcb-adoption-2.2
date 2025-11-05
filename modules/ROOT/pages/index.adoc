@@ -1,22 +1,27 @@
-= An Example Quick Course
+=  OCP on AWS Hands-On Lab
 :navtitle: Home
 
 == Introduction
 
-Course Title: Course title FIXME
+Course Title:  OCP on AWS Hands-On Lab
 
 Description:
 Course description FIXME
 
 Duration: FIXME hours
 
-== Objectives
+== Topics covered in this course
 
-On completing this course, you should be able to:
 
-* Observable, measurable objective...
-* Observable, measurable objective...
-* Observable, measurable objective...
+*  Pre-requisite setup
+
+*  IAM Permissions for Openshift Installer
+
+*  Deploy EC2 Jump Host
+
+*  Setup the Bastion EC2
+
+
 
 == Prerequisites
 

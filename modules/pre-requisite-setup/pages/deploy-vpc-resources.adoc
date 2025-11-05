@@ -1,0 +1,418 @@
+#  Deploy VPC Resources
+
+[[deploy-vpc-resources]]
+= Deploy VPC Resources
+
+This section guides you through the process of setting up the foundational networking infrastructure in AWS, a crucial prerequisite for deploying an OpenShift Container Platform (OCP) cluster. A well-designed Virtual Private Cloud (VPC) provides the isolated and secure network environment that OCP requires for its control plane, worker nodes, and applications.
+
+== Understanding VPC Resources for OpenShift
+
+An Amazon Virtual Private Cloud (VPC) is a virtual network dedicated to your AWS account. It is logically isolated from other virtual networks in the AWS Cloud. You can launch your AWS resources, such as Amazon EC2 instances, into your VPC. For an OCP deployment, the VPC configuration is paramount for ensuring connectivity, security, and high availability.
+
+Key VPC components essential for an OpenShift deployment include:
+
+*   *   **VPC (Virtual Private Cloud):** The overarching logical network container for all your resources. It defines the IP address range (CIDR block) for your private network in AWS.
+*   *   **Subnets:** These are segments of your VPC's IP address range. For OCP, you'll typically configure:
+    *   **Public Subnets:** These subnets are associated with an Internet Gateway (IGW) and are intended for resources that need direct internet access (e.g., load balancers, bastion hosts).
+    *   **Private Subnets:** These subnets are not directly routable to the internet via an IGW. They are used for sensitive resources like OCP control plane nodes (masters) and worker nodes. Instances in private subnets can initiate outbound internet connections via a NAT Gateway.
+    *   *High Availability:* For robust OCP deployments, it's best practice to distribute subnets across multiple Availability Zones (AZs) within a region. This protects your cluster against failures in a single AZ.
+*   *   **Internet Gateway (IGW):** A horizontally scaled, redundant, and highly available VPC component that allows communication between instances in your VPC and the internet. It primarily serves public subnets.
+*   *   **NAT Gateway (Network Address Translation Gateway):** Enables instances in private subnets to connect to the internet or other AWS services, but prevents the internet from initiating a connection with those instances. NAT Gateways are deployed in public subnets and require an Elastic IP address.
+*   *   **Route Tables:** These tables contain a set of rules, called routes, that determine where network traffic from your subnets or gateway is directed. You'll have:
+    *   **Public Route Table:** Directs traffic destined for the internet via the Internet Gateway.
+    *   **Private Route Table(s):** Directs outbound internet traffic via the NAT Gateway and local traffic within the VPC.
+*   *   **Security Groups:** Act as virtual firewalls for your EC2 instances. They control inbound and outbound traffic at the instance level. While OCP itself configures many necessary security groups, having a foundational understanding is key.
+*   *   **Elastic IP (EIP):** A static, public IPv4 address designed for dynamic cloud computing. An EIP is required for the NAT Gateway to provide a consistent public IP address for outbound internet traffic from private subnets.
+
+For an OCP deployment, a typical setup involves at least three public and three private subnets, each in a different Availability Zone, to ensure high availability and fault tolerance. This multi-AZ design is critical for production-grade OpenShift clusters.
+
+== Hands-on Lab: Deploy VPC Resources
+
+In this hands-on activity, you will deploy the necessary VPC infrastructure using an AWS CloudFormation template. CloudFormation allows you to define your infrastructure as code, making deployments repeatable, consistent, and less prone to manual error.
+
+The provided CloudFormation template will create:
+
+*   A new Amazon VPC.
+*   Three public subnets, each in a different Availability Zone.
+*   Three private subnets, each in a different Availability Zone.
+*   An Internet Gateway and associated route table for public subnets.
+*   A NAT Gateway in one of the public subnets (along with an Elastic IP).
+*   Route tables for private subnets, routing outbound internet traffic through the NAT Gateway.
+
+image::ocp-aws-vpc-diagram.png[OCP AWS VPC Diagram, width=800, link=images/ocp-aws-vpc-diagram.png]
+_Conceptual diagram of the VPC resources that will be deployed._
+
+=== Prerequisites
+
+*   An AWS account with administrative access.
+*   AWS Management Console access.
+*   An AWS region selected where you intend to deploy OCP (e.g., `us-east-1`, `eu-west-1`). All resources will be provisioned in this region.
+
+=== Step 1: Download the CloudFormation Template
+
+Download the `ocp-aws-vpc.yaml` CloudFormation template. This template defines all the VPC resources required for your OpenShift cluster.
+
+[source,yaml,subs="verbatim,attributes"]
+----
+AWSTemplateFormatVersion: '2010-09-09'
+Description: |
+  CloudFormation template to create a VPC, public and private subnets across 3 AZs,
+  Internet Gateway, NAT Gateway, and associated route tables for OpenShift deployment.
+
+Parameters:
+  VpcCidr:
+    Description: CIDR block for the VPC.
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnet1Cidr:
+    Description: CIDR block for Public Subnet 1.
+    Type: String
+    Default: 10.0.0.0/24
+  PublicSubnet2Cidr:
+    Description: CIDR block for Public Subnet 2.
+    Type: String
+    Default: 10.0.1.0/24
+  PublicSubnet3Cidr:
+    Description: CIDR block for Public Subnet 3.
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnet1Cidr:
+    Description: CIDR block for Private Subnet 1.
+    Type: String
+    Default: 10.0.100.0/24
+  PrivateSubnet2Cidr:
+    Description: CIDR block for Private Subnet 2.
+    Type: String
+    Default: 10.0.101.0/24
+  PrivateSubnet3Cidr:
+    Description: CIDR block for Private Subnet 3.
+    Type: String
+    Default: 10.0.102.0/24
+  AvailabilityZone1:
+    Description: First Availability Zone for subnets.
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "" # Will be dynamically chosen if left empty by CloudFormation
+  AvailabilityZone2:
+    Description: Second Availability Zone for subnets.
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "" # Will be dynamically chosen if left empty by CloudFormation
+  AvailabilityZone3:
+    Description: Third Availability Zone for subnets.
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: "" # Will be dynamically chosen if left empty by CloudFormation
+
+Conditions:
+  UseDefaultAZ1: !Equals [!Ref AvailabilityZone1, ""]
+  UseDefaultAZ2: !Equals [!Ref AvailabilityZone2, ""]
+  UseDefaultAZ3: !Equals [!Ref AvailabilityZone3, ""]
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-VPC
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-IGW
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicRT
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # Public Subnets
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet1Cidr
+      AvailabilityZone: !If [UseDefaultAZ1, !Select [0, !GetAZs ""], !Ref AvailabilityZone1]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet1
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet2Cidr
+      AvailabilityZone: !If [UseDefaultAZ2, !Select [1, !GetAZs ""], !Ref AvailabilityZone2]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet2
+
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PublicSubnet3Cidr
+      AvailabilityZone: !If [UseDefaultAZ3, !Select [2, !GetAZs ""], !Ref AvailabilityZone3]
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PublicSubnet3
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
+
+  # NAT Gateway and Elastic IP
+  EIPforNATGateway:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-NATGateway-EIP
+
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    DependsOn: PublicSubnet1
+    Properties:
+      AllocationId: !GetAtt EIPforNATGateway.AllocationId
+      SubnetId: !Ref PublicSubnet1 # NAT Gateway is placed in one public subnet
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-NATGateway
+
+  # Private Subnets and Route Tables
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateRouteTable1
+
+  PrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet1Cidr
+      AvailabilityZone: !If [UseDefaultAZ1, !Select [0, !GetAZs ""], !Ref AvailabilityZone1]
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateSubnet1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateRouteTable2
+
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet2Cidr
+      AvailabilityZone: !If [UseDefaultAZ2, !Select [1, !GetAZs ""], !Ref AvailabilityZone2]
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateSubnet2
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable2
+
+  PrivateRouteTable3:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateRouteTable3
+
+  PrivateRoute3:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable3
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref PrivateSubnet3Cidr
+      AvailabilityZone: !If [UseDefaultAZ3, !Select [2, !GetAZs ""], !Ref AvailabilityZone3]
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}-PrivateSubnet3
+
+  PrivateSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet3
+      RouteTableId: !Ref PrivateRouteTable3
+
+Outputs:
+  VpcId:
+    Description: The ID of the newly created VPC.
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${AWS::StackName}-VpcId
+  PublicSubnet1Id:
+    Description: The ID of Public Subnet 1.
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet1Id
+  PublicSubnet2Id:
+    Description: The ID of Public Subnet 2.
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet2Id
+  PublicSubnet3Id:
+    Description: The ID of Public Subnet 3.
+    Value: !Ref PublicSubnet3
+    Export:
+      Name: !Sub ${AWS::StackName}-PublicSubnet3Id
+  PrivateSubnet1Id:
+    Description: The ID of Private Subnet 1.
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet1Id
+  PrivateSubnet2Id:
+    Description: The ID of Private Subnet 2.
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet2Id
+  PrivateSubnet3Id:
+    Description: The ID of Private Subnet 3.
+    Value: !Ref PrivateSubnet3
+    Export:
+      Name: !Sub ${AWS::StackName}-PrivateSubnet3Id
+  AvailabilityZone1:
+    Description: The first Availability Zone used for subnets.
+    Value: !GetAtt PublicSubnet1.AvailabilityZone
+    Export:
+      Name: !Sub ${AWS::StackName}-AvailabilityZone1
+  AvailabilityZone2:
+    Description: The second Availability Zone used for subnets.
+    Value: !GetAtt PublicSubnet2.AvailabilityZone
+    Export:
+      Name: !Sub ${AWS::StackName}-AvailabilityZone2
+  AvailabilityZone3:
+    Description: The third Availability Zone used for subnets.
+    Value: !GetAtt PublicSubnet3.AvailabilityZone
+    Export:
+      Name: !Sub ${AWS::StackName}-AvailabilityZone3
+----
+
+Save the content above into a file named `ocp-aws-vpc.yaml`.
+
+=== Step 2: Deploy the CloudFormation Stack
+
+1.  Navigate to the AWS Management Console and search for "CloudFormation".
+2.  Click on *Create stack*.
+3.  Under *Specify template*, select *Upload a template file* and click *Choose file*.
+4.  Upload the `ocp-aws-vpc.yaml` file you just saved. Click *Next*.
+5.  On the *Specify stack details* page:
+    *   **Stack name:** Enter a unique name for your stack, e.g., `OCPLabVPC`.
+    *   **Parameters:** You can leave the default CIDR blocks and Availability Zones, or customize them if you have specific network requirements. Leaving AZs empty will allow CloudFormation to dynamically select them for you, which is generally recommended for simplicity in a lab.
+    *   Click *Next*.
+6.  On the *Configure stack options* page:
+    *   You can optionally add tags (e.g., `Project: OCP-Lab`) or configure advanced options. For this lab, you can generally leave these as default.
+    *   Click *Next*.
+7.  On the *Review* page:
+    *   Review all the details.
+    *   Scroll to the bottom and check the box: *I acknowledge that AWS CloudFormation might create IAM resources.* (Even though this template doesn't create IAM roles, it's good practice to acknowledge, and future templates might).
+    *   Click *Create stack*.
+
+The stack deployment will now begin. You can monitor its progress in the CloudFormation console by selecting your stack and viewing the *Events* tab. It typically takes 5-10 minutes for all VPC resources to be provisioned.
+
+=== Step 3: Verify Deployment and Capture Outputs
+
+Once the stack status changes to `CREATE_COMPLETE`:
+
+1.  Go to the *Outputs* tab of your CloudFormation stack.
+2.  Note down the `VpcId`, `PublicSubnet1Id`, `PublicSubnet2Id`, `PublicSubnet3Id`, `PrivateSubnet1Id`, `PrivateSubnet2Id`, `PrivateSubnet3Id`, `AvailabilityZone1`, `AvailabilityZone2`, and `AvailabilityZone3`. These values will be crucial for subsequent steps in the OCP deployment process.
+
+    Example Outputs:
+    [source,text]
+    ----
+    VpcId: vpc-0abcdef1234567890
+    PublicSubnet1Id: subnet-0123456789abcdef0
+    PublicSubnet2Id: subnet-0abcdef1234567890
+    PublicSubnet3Id: subnet-0123456789abcdef1
+    PrivateSubnet1Id: subnet-0abcdef1234567891
+    PrivateSubnet2Id: subnet-0123456789abcdef2
+    PrivateSubnet3Id: subnet-0abcdef1234567892
+    AvailabilityZone1: us-east-1a
+    AvailabilityZone2: us-east-1b
+    AvailabilityZone3: us-east-1c
+    ----
+
+3.  Optionally, navigate to the Amazon VPC console to explore the newly created resources:
+    *   In the navigation pane, click on *Your VPCs*. You should see a VPC with the name `OCPLabVPC-VPC` (or similar, based on your stack name).
+    *   Click on *Subnets* to view the public and private subnets.
+    *   Click on *Internet Gateways* to see the attached IGW.
+    *   Click on *NAT Gateways* to confirm the NAT Gateway and its associated Elastic IP.
+    *   Click on *Route Tables* to examine the routing configurations for public and private subnets.
+
+You have successfully deployed the essential VPC resources that will host your OpenShift Container Platform cluster!
